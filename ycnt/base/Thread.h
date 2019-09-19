@@ -59,7 +59,7 @@ namespace base
 class Thread {
  public:
   using ThreadFunc = std::function<void()>;
-  explicit Thread(ThreadFunc, const std::string &name = std::string());
+  explicit Thread(ThreadFunc, const std::string &name = "unknown");
   ~Thread();
   void start();
   int join();

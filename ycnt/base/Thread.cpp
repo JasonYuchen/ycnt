@@ -48,12 +48,12 @@ namespace base
 {
 
 struct ThreadData {
-  Thread::ThreadFunc &&func_;
+  Thread::ThreadFunc func_;
   string name_;
   pid_t *tid_;
   CountDownLatch *latch_;
   ThreadData(
-    Thread::ThreadFunc func,
+    Thread::ThreadFunc &&func,
     const string &name,
     pid_t *tid,
     CountDownLatch *latch)
@@ -104,7 +104,7 @@ Thread::Thread(ThreadFunc func, const string &name)
     name_(),
     latch_(1)
 {
-  name_ = std::to_string(numCreated_.fetch_add(1)) + name;
+  name_ = std::to_string(numCreated_.fetch_add(1)) + ":" + name;
 }
 
 Thread::~Thread()
@@ -122,9 +122,9 @@ void Thread::start()
   if (pthread_create(&pthreadId_, nullptr, &startThreadFunc, data)) {
     started_ = false;
     delete data;
-    //LOG_FATAL << "Failed to start Thread " << name_ << " in pthread_create";
+    // LOG_FATAL << "Failed to start Thread " << name_ << " in pthread_create";
   } else {
-    // wait for thread execution
+    // wait for starting thread execution
     latch_.wait();
     assert(tid_ > 0);
   }
@@ -157,6 +157,8 @@ int Thread::numCreated()
 {
   return numCreated_;
 }
+
+std::atomic_int Thread::numCreated_(0);
 
 } // namespace base
 
