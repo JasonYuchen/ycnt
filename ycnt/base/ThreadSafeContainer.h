@@ -2,8 +2,8 @@
 // Created by jason on 2019/9/18.
 //
 
-#ifndef YCNT_YCNT_BASE_THREADSAFEQUEUE_H_
-#define YCNT_YCNT_BASE_THREADSAFEQUEUE_H_
+#ifndef YCNT_YCNT_BASE_THREADSAFECONTAINER_H_
+#define YCNT_YCNT_BASE_THREADSAFECONTAINER_H_
 
 #include <atomic>
 #include <mutex>
@@ -79,4 +79,4 @@ class BlockingQueue {
 
 } // namespace ycnt
 
-#endif //YCNT_YCNT_BASE_THREADSAFEQUEUE_H_
+#endif //YCNT_YCNT_BASE_THREADSAFECONTAINER_H_

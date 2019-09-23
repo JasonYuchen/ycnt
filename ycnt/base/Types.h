@@ -5,6 +5,8 @@
 #ifndef YCNT_YCNT_BASE_TYPES_H_
 #define YCNT_YCNT_BASE_TYPES_H_
 
+#define CACHE_LINE 64
+
 #define LIKELY(x) (__builtin_expect((x), 1))
 #define UNLIKELY(x) (__builtin_expect((x), 0))
 
