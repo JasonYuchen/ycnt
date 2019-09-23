@@ -31,12 +31,7 @@ class AsyncLogging {
     size_t bucketSize,
     size_t rollSize,
     int flushInterval);
-  ~AsyncLogging()
-  {
-    if (running_) {
-      stop();
-    }
-  }
+  ~AsyncLogging();
 
   void append(const char *logline, int len);
   void start()
@@ -74,7 +69,7 @@ class AsyncLogging {
   std::vector<FixedBufferNode> fixedBuffers_;
   BufferPtrVec frontBuffers_; // guarded by mutex_
   class LogBufferPool;
-  std::unique_ptr<LogBufferPool> bufferPool_; // pimpl
+  LogBufferPool *bufferPool_; // pimpl
 };
 
 } // namespace base

@@ -5,6 +5,8 @@
 #include <assert.h>
 
 #include <ycnt/base/AsyncLogging.h>
+#include <ycnt/base/Timestamp.h>
+#include <ycnt/base/File.h>
 
 using namespace std;
 
@@ -16,7 +18,8 @@ namespace base
 
 class AsyncLogging::LogBufferPool {
  public:
-  explicit LogBufferPool(size_t initSize = 4)
+  explicit LogBufferPool(size_t initSize = 4, size_t maxSize = 16)
+    : maxPoolSize_(maxSize)
   {
     for (int i = 0; i < initSize; ++i) {
       emptyBuffers_.push(std::make_unique<Buffer>());
@@ -34,11 +37,14 @@ class AsyncLogging::LogBufferPool {
   }
   void push(BufferPtr buf)
   {
-    emptyBuffers_.push(std::move(buf));
+    if (emptyBuffers_.size() < 16) {
+      emptyBuffers_.push(std::move(buf));
+    }
   }
  private:
   DISALLOW_COPY_MOVE_AND_ASSIGN(LogBufferPool);
   BlockingQueue<BufferPtr> emptyBuffers_;
+  size_t maxPoolSize_;
 };
 
 AsyncLogging::AsyncLogging(
@@ -58,8 +64,19 @@ AsyncLogging::AsyncLogging(
     cv_(),
     fixedBuffers_(bucketSize),
     frontBuffers_(),
-    bufferPool_(make_unique<LogBufferPool>())
+    bufferPool_(new LogBufferPool())
 {
+  for (auto &node : fixedBuffers_) {
+    node.buffer_.reset(new Buffer());
+  }
+}
+
+AsyncLogging::~AsyncLogging()
+{
+  if (running_) {
+    stop();
+  }
+  delete bufferPool_;
 }
 
 void AsyncLogging::append(const char *logline, int len)
@@ -87,7 +104,7 @@ void AsyncLogging::threadFunc()
 {
   assert(running_ == true);
   latch_.countDown();
-  // LogFile output(basename_, rollSize_, false);
+  LogFile output(basename_, rollSize_);
   BufferPtrVec backBuffers_;
   backBuffers_.reserve(16);
   while (running_) {
@@ -123,7 +140,6 @@ void AsyncLogging::threadFunc()
       backBuffers_.erase(backBuffers_.begin() + 2, backBuffers_.end());
     }
     for (const auto &buffer : backBuffers_) {
-      // FIXME use ::writev ?
       output.append(buffer->data(), buffer->length());
       buffer->reset();
     }
@@ -131,7 +147,7 @@ void AsyncLogging::threadFunc()
       bufferPool_->push(std::move(backBuffers_.back()));
       backBuffers_.pop_back();
     }
-    assert(backBuffers_.empty());
+    backBuffers_.clear();
     output.flush();
   }
   output.flush();

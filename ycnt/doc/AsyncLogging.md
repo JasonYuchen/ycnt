@@ -1,22 +1,39 @@
 ```
-0.Basic:
+0.basic
 
-    thread     [0,4,...] [1,5,...] [2,6,...] [3,7,...]
-                   |         |         |         |
-                   |         |         |         |
- fixedBuffers  [***    ] [*      ] [**     ] [****** ]
- frontBuffers  []
-  backBuffers  []
-   bufferPool  [ empty ] [ empty ] [ empty ] ...
+   thread 0,1,2...-hash-------------------->
+                     |----->               |
+                           |               |
+                           |               |
+                 <----- [***  ]         [**   ] 
+                 |      bucket 0        bucket 1 ...
+                 |            \         /
+                 |            fixedBuffers <--------------------<
+                 |                                              |
+                 |                                              |
+   <------[full] [full] ...                                     |
+   |       frontBuffers                                         |
+   |                                                            |
+   |                                                            |
+   >------[full] [full] ...------> back-end writer ----> [empty] [empty] ...
+           backBuffers                   |                  bufferPool
+                                      LogFile
+                                         |
+                               <---- appendFile <----------new file
+                               |
+                               |
+                         archived file         
 
 1.fixedBuffer full
 
     thread     [0,4,...] ...
                    |
                    |(1)add full to front, get empty from pool
+                   |
  fixedBuffers  <-[   ]------------<
                |                  |
                |(2)notify writer  |
+               |                  |
  frontBuffers [full]              |
                                   |
    bufferPool  ... [empty] ------->
