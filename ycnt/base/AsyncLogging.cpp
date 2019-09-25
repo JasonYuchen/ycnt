@@ -143,11 +143,11 @@ void AsyncLogging::threadFunc()
       output.append(buffer->data(), buffer->length());
       buffer->reset();
     }
-    for (int i = 0; i < backBuffers_.size(); ++i) {
+    int size = backBuffers_.size();
+    for (int i = 0; i < size; ++i) {
       bufferPool_->push(std::move(backBuffers_.back()));
       backBuffers_.pop_back();
     }
-    backBuffers_.clear();
     output.flush();
   }
   output.flush();
