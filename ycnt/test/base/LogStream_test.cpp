@@ -57,3 +57,25 @@ TEST(LogStream, LogStreamBasic)
   thread3.join();
   sleep(3);
 }
+
+TEST(LogStream, BenchFromMuduo)
+{
+  Logger::init("testLogger", 1, 500 * 1000 * 1000);
+  int cnt = 0;
+  const int kBatch = 1000;
+  string empty = " ";
+  for (int t = 0; t < 10; ++t) {
+    Timestamp start = Timestamp::now();
+    for (int i = 0; i < kBatch; ++i) {
+      LOG_INFO << "Hello 0123456789" << " abcdefghijklmnopqrstuvwxyz "
+               << empty
+               << cnt;
+      ++cnt;
+    }
+    Timestamp end = Timestamp::now();
+    printf("%f\n", timeDifference(end, start) * 1000000 / kBatch);
+    struct timespec ts = {0, 500 * 1000 * 1000};
+    nanosleep(&ts, NULL);
+  }
+  sleep(3);
+}

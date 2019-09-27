@@ -191,6 +191,10 @@ bool Logger::init(
   int flushInterval)
 {
   currentThread::tid(); // other created Thread will cache tid in run.
+  if (asyncOutput_) { // not the first time call !
+    asyncOutput_->stop();
+    delete asyncOutput_;
+  }
   asyncOutput_ =
     new AsyncLogging(basename, bucketSize, rollSize, flushInterval);
   asyncOutput_->start();
