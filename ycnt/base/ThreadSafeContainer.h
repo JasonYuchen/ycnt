@@ -10,6 +10,8 @@
 #include <condition_variable>
 #include <queue>
 #include <memory>
+#include <assert.h>
+
 #include <ycnt/base/Types.h>
 
 namespace ycnt

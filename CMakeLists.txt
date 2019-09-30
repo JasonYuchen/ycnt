@@ -25,3 +25,10 @@ target_link_libraries(
         gtest_main
         ycnt)
 gtest_discover_tests(ycnt_test)
+
+add_executable(logger_bench ycnt/test/bench/Logging_bench.cpp)
+target_link_libraries(
+        logger_bench
+        PUBLIC
+        ycnt
+)
