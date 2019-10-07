@@ -6,6 +6,8 @@
 #define YCNT_YCNT_BASE_THREADPOOL_H_
 
 #include <functional>
+#include <future>
+#include <memory>
 
 #include <ycnt/base/Thread.h>
 #include <ycnt/base/Types.h>
@@ -36,15 +38,20 @@ class ThreadPool {
   void run(Task f);
 
 //  TODO: do we need an interface with any return type?
-//  template<typename Func>
-//  std::future<typename std::result_of<Func()>::type> run(Func f)
-//  {
-//    using resultType = typename std::result_of<Func()>::type;
-//    std::packaged_task<resultType()> task(std::move(f));
-//    std::future<resultType> result(task.get_future());
-//    queue_.push(std::move(task));
-//    return result;
-//  }
+//  have to use a shared_pointer
+  template<typename Func>
+  std::future<typename std::result_of<Func()>::type> waitableRun(Func f)
+  {
+    using resultType = typename std::result_of<Func()>::type;
+    // if use make_unique, compilation error, why?
+    auto
+      task = std::make_shared<std::packaged_task<resultType()>>(std::move(f));
+    std::future<resultType> result(task->get_future());
+    queue_.push(
+      [t{std::move(task)}]
+      { t->operator()(); });
+    return result;
+  }
 
  private:
   ThreadPool(const std::string &name, size_t maxQueueSize);

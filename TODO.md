@@ -12,6 +12,7 @@ A list of planning features that are different from muduo.
 |4|channel pipeline for handlers|&times;|
 |5|channel priority||
 |6|new connection load balancing policy (RR in muduo) ||
+|7|submit waitable task in ThreadPool|&radic;|
 
 A list of objectives beyond ycnt.
 

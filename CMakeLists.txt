@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(.)
 aux_source_directory(ycnt/base SOURCE)
 aux_source_directory(ycnt/net SOURCE)
+aux_source_directory(ycnt/net/poller SOURCE)
 aux_source_directory(ycnt/test/base TEST_SOURCE)
 aux_source_directory(ycnt/test/net TEST_SOURCE)
 
