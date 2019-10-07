@@ -64,9 +64,11 @@ void ThreadPool::start()
 void ThreadPool::stop()
 {
   running_ = false;
-  queue_.push(
-    []
-    {});
+  for (auto &thread : threads_) {
+    queue_.push(
+      []
+      {});
+  }
   for (auto &thread : threads_) {
     thread->join();
   }
