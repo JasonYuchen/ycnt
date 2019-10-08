@@ -8,6 +8,7 @@
 #include <functional>
 #include <future>
 #include <memory>
+#include <queue>
 
 #include <ycnt/base/Thread.h>
 #include <ycnt/base/Types.h>
@@ -19,12 +20,16 @@ namespace ycnt
 namespace base
 {
 
+using Task = std::function<void()>;
+
 class ThreadPool {
  public:
-  using Task = std::function<void()>;
+  // RAN = random, RR = round robin, LB = load balancing
+  enum SchedulePolicy { RAN, RR, LB };
   static std::unique_ptr<ThreadPool> newThreadPool(
     size_t threadNum,
     const std::string &name = "ThreadPool",
+    SchedulePolicy policy = RAN,
     const Task &threadInitCallback = []
     {},
     size_t maxQueueSize = 100000
@@ -34,33 +39,40 @@ class ThreadPool {
   void start();
   void stop();
   const std::string &name() const;
-  size_t queueSize() const;
+
+  // do not throw exception in f which may cause std::abort
   void run(Task f);
 
-//  TODO: do we need an interface with any return type?
-//  have to use a shared_pointer
+  //  do we need an interface with any return type?
   template<typename Func>
   std::future<typename std::result_of<Func()>::type> waitableRun(Func f)
   {
     using resultType = typename std::result_of<Func()>::type;
-    // if use make_unique, compilation error, why?
     auto
       task = std::make_shared<std::packaged_task<resultType()>>(std::move(f));
     std::future<resultType> result(task->get_future());
-    queue_.push(
-      [t{std::move(task)}]
-      { t->operator()(); });
+    if (workers_.empty()) {
+      task->operator()();
+    } else {
+      run(
+        [task = std::move(task)]
+        { task->operator()(); });
+    }
     return result;
   }
 
  private:
-  ThreadPool(const std::string &name, size_t maxQueueSize);
+  ThreadPool(
+    const std::string &name,
+    SchedulePolicy policy,
+    const Task &initCallback,
+    size_t maxQueueSize);
   DISALLOW_COPY_AND_ASSIGN(ThreadPool);
-  void runInThread();
   const std::string name_;
-  Task threadInitCallback_; // should be reentrant
-  std::vector<std::unique_ptr<Thread>> threads_;
-  BoundedBlockingQueue<Task> queue_;
+  const SchedulePolicy policy_;
+  Task initCallback_; // should be reentrant
+  class Worker;
+  std::vector<std::unique_ptr<Worker>> workers_;
   std::atomic_bool running_;
 };
 

@@ -6,6 +6,7 @@
 
 #include <ycnt/base/ThreadPool.h>
 #include <ycnt/base/Utils.h>
+#include <ycnt/base/Timestamp.h>
 
 using namespace std;
 
@@ -15,30 +16,128 @@ namespace ycnt
 namespace base
 {
 
+constexpr double kAlpha = 0.9;
+
+class ThreadPool::Worker {
+ public:
+  Worker(const std::string &name, const Task &initCallback, size_t maxQueueSize)
+    : thread_(
+    [this]
+    { this->runInThread(); }, name),
+      running_(false),
+      tasks_(maxQueueSize),
+      lastAvgTaskRuntime_(0),
+      avgTaskRuntime_(0)
+  {
+    tasks_.push(initCallback);
+  }
+
+  ~Worker()
+  {
+    if (running_) {
+      stop();
+    }
+  }
+
+  void start()
+  {
+    running_ = true;
+    thread_.start();
+  }
+
+  void stop()
+  {
+    running_ = false;
+    tasks_.push(
+      []
+      {});
+    thread_.join();
+  }
+
+  void submit(Task &&f)
+  {
+    tasks_.push(std::move(f));
+  }
+
+  int64_t workload()
+  {
+    return avgTaskRuntime_.load() * tasks_.size();
+  }
+
+  int64_t avgRuntime()
+  {
+    return avgTaskRuntime_.load();
+  }
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(Worker);
+  void runInThread()
+  {
+    try {
+      while (running_) {
+        Task task(tasks_.pop());
+        if (task) {
+          int64_t start = Timestamp::now().microSecondsSinceEpoch() / 1000;
+          task();
+          int64_t end = Timestamp::now().microSecondsSinceEpoch() / 1000;
+          lastAvgTaskRuntime_ = static_cast<int64_t>(
+            (lastAvgTaskRuntime_ * alpha_ + end - start) / (1 + alpha_));
+          avgTaskRuntime_.store(lastAvgTaskRuntime_);
+        }
+      }
+    } catch (const exception &ex) {
+      fprintf(
+        stderr,
+        "exception caught in ThreadPool Worker %s\n",
+        thread_.name().c_str());
+      fprintf(stderr, "reason: %s\n", ex.what());
+      abort();
+    } catch (...) {
+      fprintf(
+        stderr,
+        "unknown exception caught in ThreadPool %s\n",
+        thread_.name().c_str());
+      throw;
+    }
+  }
+  Thread thread_;
+  std::atomic_bool running_;
+  BoundedBlockingQueue<Task> tasks_;
+  int64_t lastAvgTaskRuntime_; // ms
+  std::atomic_int64_t avgTaskRuntime_; // ms
+  const double alpha_ = kAlpha;
+};
+
 std::unique_ptr<ThreadPool> ThreadPool::newThreadPool(
   size_t threadNum,
   const std::string &name,
-  const ycnt::base::ThreadPool::Task &threadInitCallback,
+  SchedulePolicy policy,
+  const Task &initCallback,
   size_t maxQueueSize)
 {
-  std::unique_ptr<ThreadPool> pool(new ThreadPool(name, maxQueueSize));
-  pool->threadInitCallback_ = threadInitCallback;
-  pool->threads_.reserve(threadNum);
+  std::unique_ptr<ThreadPool>
+    pool(new ThreadPool(name, policy, initCallback, maxQueueSize));
+  pool->workers_.reserve(threadNum);
   for (int i = 0; i < threadNum; ++i) {
     char id[32];
     convert(id, i + 1);
-    pool->threads_.emplace_back(
-      make_unique<Thread>(
-        [&pool]()
-        { pool->runInThread(); },
-        pool->name_ + id));
+    pool->workers_.emplace_back(
+      make_unique<Worker>(
+        name + ":" + std::to_string(i),
+        initCallback,
+        maxQueueSize));
   }
   return pool;
 }
 
-ThreadPool::ThreadPool(const std::string &name, size_t maxQueueSize)
+ThreadPool::ThreadPool(
+  const std::string &name,
+  SchedulePolicy policy,
+  const Task &initCallback,
+  size_t maxQueueSize)
   : name_(name),
-    queue_(maxQueueSize),
+    policy_(policy),
+    initCallback_(initCallback),
     running_(false)
 {
 }
@@ -53,24 +152,19 @@ ThreadPool::~ThreadPool()
 void ThreadPool::start()
 {
   running_ = true;
-  for (auto &thread : threads_) {
-    thread->start();
+  for (auto &worker : workers_) {
+    worker->start();
   }
-  if (threads_.empty()) {
-    threadInitCallback_();
+  if (workers_.empty()) {
+    initCallback_();
   }
 }
 
 void ThreadPool::stop()
 {
   running_ = false;
-  for (auto &thread : threads_) {
-    queue_.push(
-      []
-      {});
-  }
-  for (auto &thread : threads_) {
-    thread->join();
+  for (auto &worker : workers_) {
+    worker->stop();
   }
 }
 
@@ -79,40 +173,14 @@ const std::string &ThreadPool::name() const
   return name_;
 }
 
-size_t ThreadPool::queueSize() const
-{
-  return queue_.size();
-}
-
 void ThreadPool::run(Task task)
 {
-  if (threads_.empty()) {
+  if (workers_.empty()) {
     task();
   } else {
-    queue_.push(std::move(task));
-  }
-}
-
-void ThreadPool::runInThread()
-{
-  try {
-    threadInitCallback_();
-    while (running_) {
-      Task task(queue_.pop());
-      if (task) {
-        task();
-      }
-    }
-  } catch (const exception &ex) {
-    fprintf(stderr, "exception caught in ThreadPool %s\n", name_.c_str());
-    fprintf(stderr, "reason: %s\n", ex.what());
-    abort();
-  } catch (...) {
-    fprintf(
-      stderr,
-      "unknown exception caught in ThreadPool %s\n",
-      name_.c_str());
-    throw;
+    // TODO: schedule, default=random
+    int idx = Timestamp::now().microSecondsSinceEpoch() % workers_.size();
+    workers_[idx]->submit(std::move(task));
   }
 }
 

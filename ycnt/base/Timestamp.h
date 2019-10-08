@@ -27,11 +27,17 @@ class Timestamp {
   }
   std::string toString() const;
   std::string toFormattedString(bool showMicroseconds = true) const;
+
   bool valid() const
-  { return microSecondsSinceEpoch_ > 0; }
+  {
+    return microSecondsSinceEpoch_ > 0;
+  }
 
   int64_t microSecondsSinceEpoch() const
-  { return microSecondsSinceEpoch_; }
+  {
+    return microSecondsSinceEpoch_;
+  }
+
   time_t secondsSinceEpoch() const
   {
     return static_cast<time_t>(microSecondsSinceEpoch_
