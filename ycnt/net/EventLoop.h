@@ -23,6 +23,8 @@ class EventLoop {
   EventLoop();
   ~EventLoop();
   void loop();
+  void quit();
+  int64_t iteration() const;
   void assertInLoopThread();
  private:
   DISALLOW_COPY_AND_ASSIGN(EventLoop);
@@ -32,7 +34,9 @@ class EventLoop {
   bool eventHandling_;
   bool functorHandling_;
   int64_t iteration_;
+  base::Timestamp pollReturnTime_;
   std::unique_ptr<Poller> poller_;
+  ChannelVec activeChannels_;
   std::vector<std::function<void()>> functors_;
 };
 
