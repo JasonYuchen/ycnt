@@ -16,6 +16,8 @@ target_link_libraries(ycnt PUBLIC pthread)
 target_link_libraries(ycnt_static PUBLIC pthread)
 set_target_properties(ycnt_static PROPERTIES OUTPUT_NAME "ycnt")
 
+if (test)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 include(GoogleTest)
 link_libraries(gtest gtest_main)
 add_executable(ycnt_test ${SOURCE} ${TEST_SOURCE})
@@ -26,10 +28,13 @@ target_link_libraries(
         gtest_main
         ycnt)
 gtest_discover_tests(ycnt_test)
+endif ()
 
+if (bench)
 add_executable(logger_bench ycnt/test/bench/Logging_bench.cpp)
 target_link_libraries(
         logger_bench
         PUBLIC
         ycnt
 )
+endif ()
