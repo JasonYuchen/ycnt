@@ -17,7 +17,11 @@ class EventLoop;
 
 class Channel {
  public:
+  enum Flag { kNew, kAdded, kDeleted, NUM_OF_FLAGS };
   Channel(EventLoop *loop, int fd);
+  int fd() const;
+  Flag flag() const;
+  void setFlag() const;
   ~Channel();
  private:
   DISALLOW_COPY_AND_ASSIGN(Channel);

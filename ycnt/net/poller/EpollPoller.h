@@ -23,6 +23,7 @@ class Channel;
 
 class EpollPoller : public Poller {
  public:
+  static constexpr int kInitEventsSize = 16;
   using ChannelVec = std::vector<Channel *>;
 
   EpollPoller(EventLoop *loop);
@@ -34,7 +35,10 @@ class EpollPoller : public Poller {
  private:
   DISALLOW_COPY_AND_ASSIGN(EpollPoller);
   using ChannelMap = std::map<int, Channel *>;
+  using EventVec = std::vector<struct epoll_event>;
   ChannelMap channels_;
+  EventVec events_;
+  int epollfd_;
   EventLoop *loop_;
 };
 

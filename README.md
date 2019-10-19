@@ -9,6 +9,24 @@ This library refers to [chenshuo's muduo](https://www.github.com/chenshuo/muduo)
 #### Build
 
 use CMake
+```
+cmake .
+make
+```
+
+To enable test, use `-Dtest=1`
+
+```
+cmake -Dtest
+make
+```
+
+To enable benchmark, use `-Dbench=1`
+
+```
+cmake -Dbench=1
+make
+```
 
 #### Notes & docs
 

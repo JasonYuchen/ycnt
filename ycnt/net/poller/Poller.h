@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <ycnt/base/Timestamp.h>
+#include <ycnt/net/EventLoop.h>
 
 namespace ycnt
 {
@@ -16,7 +17,7 @@ namespace net
 {
 
 class Channel;
-class EventLoop;
+
 using ChannelVec = std::vector<Channel *>;
 class Poller {
  public:
