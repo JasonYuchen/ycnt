@@ -173,10 +173,12 @@ const std::string &ThreadPool::name() const
   return name_;
 }
 
-void ThreadPool::run(Task task)
+void ThreadPool::run(Task task, int workerId)
 {
   if (workers_.empty()) {
     task();
+  } else if (workerId >= 0) {
+    workers_[workerId % workers_.size()]->submit(std::move(task));
   } else {
     // TODO: schedule, default=random
     int idx = Timestamp::now().microSecondsSinceEpoch() % workers_.size();

@@ -24,8 +24,8 @@ using Task = std::function<void()>;
 
 class ThreadPool {
  public:
-  // RAN = random, RR = round robin, LB = load balancing
-  enum SchedulePolicy { RAN, RR, LB };
+  // RAN = random, RR = round robin, LB0 = load balancing-0
+  enum SchedulePolicy { RAN, RR, LB0 };
   static std::unique_ptr<ThreadPool> newThreadPool(
     size_t threadNum,
     const std::string &name = "ThreadPool",
@@ -41,11 +41,16 @@ class ThreadPool {
   const std::string &name() const;
 
   // do not throw exception in f which may cause std::abort
-  void run(Task f);
+  // if workerId is specified, scheduling will be suppressed and the submitted
+  // job will be executed in thread workers[workerId % workerSize]
+  void run(Task f, int workerId = -1);
 
+  // can throw exception which will be wrapped in the future
   //  do we need an interface with any return type?
   template<typename Func>
-  std::future<typename std::result_of<Func()>::type> waitableRun(Func f)
+  std::future<typename std::result_of<Func()>::type> waitableRun(
+    Func f,
+    int workerId = -1)
   {
     using resultType = typename std::result_of<Func()>::type;
     auto
@@ -56,7 +61,8 @@ class ThreadPool {
     } else {
       run(
         [task = std::move(task)]
-        { task->operator()(); });
+        { task->operator()(); },
+        workerId);
     }
     return result;
   }

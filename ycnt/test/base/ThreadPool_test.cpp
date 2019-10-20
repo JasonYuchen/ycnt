@@ -62,3 +62,33 @@ TEST(ThreadPool, BasicRoutine)
   ASSERT_EQ(num, 1000);
   pool->stop();
 }
+
+TEST(ThreadPool, SpecifiyWorker)
+{
+  std::unique_ptr<ThreadPool> pool(
+    ThreadPool::newThreadPool(
+      4,
+      "testThreadPool",
+      ThreadPool::SchedulePolicy::RAN,
+      []
+      {
+        cout << "worker thread " << currentThread::tid()
+             << " is running..." << endl;
+      }));
+  pool->start();
+  int a = 0;
+  int b = 0;
+  for (int i = 0; i < 100; ++i) {
+    pool->run(
+      [&a]
+      { a++; }, 1);
+  }
+  for (int i = 0; i < 100; ++i) {
+    pool->waitableRun(
+      [&b]
+      { b++; }, 1);
+  }
+  ::sleep(1);
+  ASSERT_EQ(a, 100);
+  ASSERT_EQ(b, 100);
+}
