@@ -181,7 +181,31 @@ void ThreadPool::run(Task task, int workerId)
     workers_[workerId % workers_.size()]->submit(std::move(task));
   } else {
     // TODO: schedule, default=random
-    int idx = Timestamp::now().microSecondsSinceEpoch() % workers_.size();
+    static int idx = 0;
+    switch (policy_) {
+      case RAN: {
+        idx = Timestamp::now().microSecondsSinceEpoch() % workers_.size();
+        break;
+      }
+      case RR: {
+        idx++;
+        break;
+      }
+      case LB0: {
+        int _idx = 0;
+        int64_t minLoad = INT64_MAX;
+        for (int i = 0; i < workers_.size(); ++i) {
+          int64_t load = workers_[i]->workload();
+          if (load < minLoad) {
+            minLoad = load;
+            _idx = i;
+          }
+        }
+        idx = _idx;
+        break;
+      }
+      default:idx = Timestamp::now().microSecondsSinceEpoch() % workers_.size();
+    }
     workers_[idx]->submit(std::move(task));
   }
 }

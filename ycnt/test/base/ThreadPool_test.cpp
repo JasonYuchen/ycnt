@@ -92,3 +92,49 @@ TEST(ThreadPool, SpecifiyWorker)
   ASSERT_EQ(a, 100);
   ASSERT_EQ(b, 100);
 }
+
+TEST(ThreadPool, RoundRobin)
+{
+  std::unique_ptr<ThreadPool> pool(
+    ThreadPool::newThreadPool(
+      4,
+      "testThreadPool",
+      ThreadPool::SchedulePolicy::RR,
+      []
+      {
+        cout << "worker thread " << currentThread::tid()
+             << " is running..." << endl;
+      }));
+  pool->start();
+
+  for (int i = 0; i < 10; ++i) {
+    pool->run(
+      []
+      { cout << currentThread::tid() << endl; });
+  }
+}
+
+TEST(ThreadPool, LoadBalance0)
+{
+  std::unique_ptr<ThreadPool> pool(
+    ThreadPool::newThreadPool(
+      4,
+      "testThreadPool",
+      ThreadPool::SchedulePolicy::LB0,
+      []
+      {
+        cout << "worker thread " << currentThread::tid()
+             << " is running..." << endl;
+      }));
+  pool->start();
+  // TODO: use thread safe unordered map
+  for (int i = 0; i < 10; ++i) {
+    ::sleep(3);
+    pool->run(
+      []
+      {
+        ::sleep(currentThread::tid() % 5);
+        cout << currentThread::tid() << endl;
+      });
+  }
+}
