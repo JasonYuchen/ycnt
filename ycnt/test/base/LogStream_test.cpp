@@ -60,7 +60,7 @@ TEST(LogStream, LogStreamBasic)
 
 TEST(LogStream, BenchFromMuduo)
 {
-  Logger::init("testLogger", 1, 500 * 1000 * 1000);
+  Logger::init("testLogger", Logger::LogLevel::INFO, 1, 500 * 1000 * 1000);
   int cnt = 0;
   const int kBatch = 1000;
   string empty = " ";
