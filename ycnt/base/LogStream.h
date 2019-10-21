@@ -104,10 +104,12 @@ class Logger {
   // not thread safe, should be called in the beginning of the program
   static bool init(
     const std::string &basename,
+    LogLevel logLevel = INFO,
     size_t bucketSize = 4,
     size_t rollSize = 512 * 1024 * 1024,
     int flushInterval = 3);
  private:
+  static LogLevel logLevel_;
   static AsyncLogging *asyncOutput_;
 
   StringArg getBasename(StringArg filename);

@@ -154,6 +154,7 @@ void defaultFlush()
 }
 
 AsyncLogging *Logger::asyncOutput_ = nullptr;
+Logger::LogLevel Logger::logLevel_ = INFO;
 
 Logger::Logger(StringArg file, int line, LogLevel level)
   : basename_(getBasename(file)),
@@ -170,12 +171,14 @@ Logger::Logger(StringArg file, int line, LogLevel level)
 
 Logger::~Logger()
 {
-  stream_ << " - " << basename_ << ':' << line_ << '\n';
-  const LogStream::Buffer &buf(stream_.buffer());
-  asyncOutput_->append(buf.data(), buf.length());
-  if (UNLIKELY(level_ == FATAL)) {
-    asyncOutput_->stop();
-    ::abort();
+  if (logLevel_ >= level_) {
+    stream_ << " - " << basename_ << ':' << line_ << '\n';
+    const LogStream::Buffer &buf(stream_.buffer());
+    asyncOutput_->append(buf.data(), buf.length());
+    if (UNLIKELY(level_ == FATAL)) {
+      asyncOutput_->stop();
+      ::abort();
+    }
   }
 }
 
@@ -186,6 +189,7 @@ LogStream &Logger::stream()
 
 bool Logger::init(
   const std::string &basename,
+  LogLevel logLevel,
   size_t bucketSize,
   size_t rollSize,
   int flushInterval)
@@ -195,6 +199,7 @@ bool Logger::init(
     asyncOutput_->stop();
     delete asyncOutput_;
   }
+  logLevel_ = logLevel;
   asyncOutput_ =
     new AsyncLogging(basename, bucketSize, rollSize, flushInterval);
   asyncOutput_->start();
