@@ -36,6 +36,7 @@ class EpollPoller : public Poller {
   DISALLOW_COPY_AND_ASSIGN(EpollPoller);
   using ChannelMap = std::map<int, Channel *>;
   using EventVec = std::vector<struct epoll_event>;
+  void updateInEpoll(int op, Channel *channel);
   ChannelMap channels_;
   EventVec events_;
   int epollfd_;
