@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <functional>
+#include <poll.h>
 
 #include <ycnt/base/Types.h>
 #include <ycnt/base/Timestamp.h>
@@ -34,11 +35,9 @@ class Channel {
   void setCloseCallback(EventCallback cb);
   void setErrorCallback(EventCallback cb);
 
-  int fd() const
-  { throw "unimplemented"; }
-  Flag flag() const
-  { throw "unimplemented"; }
-  void setFlag(Flag flag) const;
+  int fd() const;
+  Flag flag() const;
+  void setFlag(Flag flag);
   int events() const;
   void setRevents(int revents);
   bool isNoneEvent() const;
@@ -54,6 +53,13 @@ class Channel {
   static const char *flagToString();
  private:
   DISALLOW_COPY_AND_ASSIGN(Channel);
+
+  static constexpr int kNoneEvent = 0;
+  static constexpr int kReadEvent = POLLIN | POLLOUT;
+  static constexpr int kWriteEvent = POLLOUT;
+
+  void handleEventImpl(base::Timestamp receiveTime);
+
   EventLoop *loop_;
   const int fd_;
   int events_;
@@ -62,6 +68,7 @@ class Channel {
   std::weak_ptr<void> tie_;
   bool tied_;
   bool eventHandling_;
+  bool addedToLoop_;
   ReadCallback readCallback_;
   EventCallback writeCallback_;
   EventCallback closeCallback_;
