@@ -2,10 +2,6 @@
 // Created by jason on 2019/10/23.
 //
 
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <netinet/tcp.h>
-
 #include <ycnt/net/Socket.h>
 #include <ycnt/base/LogStream.h>
 
