@@ -10,6 +10,10 @@
 #define LIKELY(x) (__builtin_expect((x), 1))
 #define UNLIKELY(x) (__builtin_expect((x), 0))
 
+#define DEFAULT_COPY_AND_ASSIGN(TypeName)           \
+TypeName(const TypeName&) = default;                \
+TypeName& operator=(const TypeName&) = default      \
+
 #define DISALLOW_COPY_AND_ASSIGN(TypeName)          \
 TypeName(const TypeName&) = delete;                 \
 TypeName& operator=(const TypeName&) = delete
@@ -19,5 +23,34 @@ TypeName(const TypeName&) = delete;                 \
 TypeName& operator=(const TypeName&) = delete;      \
 TypeName(TypeName&&) = delete;                      \
 TypeName& operator=(const TypeName&&) = delete
+
+class StringArg {
+ public:
+  template<int N>
+  StringArg(const char (&str)[N]) : ptr_(str), len_(N - 1)
+  {}
+  StringArg(const char *str, size_t len) : ptr_(str), len_(len)
+  {}
+  StringArg(const StringArg &) = default;
+  StringArg &operator=(const StringArg &) = default;
+
+  const char *data() const
+  {
+    return ptr_;
+  }
+
+  size_t size() const
+  {
+    return len_;
+  }
+ private:
+  const char *ptr_;
+  size_t len_;
+};
+
+inline StringArg operator ""_arg(const char *str, size_t len)
+{
+  return StringArg(str, len);
+}
 
 #endif //YCNT_YCNT_BASE_TYPES_H_

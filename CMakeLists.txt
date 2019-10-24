@@ -3,6 +3,8 @@ project(ycnt)
 
 set(CMAKE_CXX_STANDARD 14)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
 include_directories(.)
 aux_source_directory(ycnt/base SOURCE)
 aux_source_directory(ycnt/net SOURCE)

@@ -18,35 +18,6 @@ namespace ycnt
 namespace base
 {
 
-class StringArg {
- public:
-  template<int N>
-  StringArg(const char (&str)[N]) : ptr_(str), len_(N - 1)
-  {}
-  StringArg(const char *str, size_t len) : ptr_(str), len_(len)
-  {}
-  StringArg(const StringArg &) = default;
-  StringArg &operator=(const StringArg &) = default;
-
-  const char *data() const
-  {
-    return ptr_;
-  }
-
-  size_t size() const
-  {
-    return len_;
-  }
- private:
-  const char *ptr_;
-  size_t len_;
-};
-
-inline StringArg operator ""_arg(const char *str, size_t len)
-{
-  return StringArg(str, len);
-}
-
 class LogStream {
  public:
   using Buffer = FixedBuffer<kSmallBufferSize>;

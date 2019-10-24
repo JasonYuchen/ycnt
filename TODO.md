@@ -19,6 +19,7 @@ A list of objectives beyond ycnt.
 
 |#|description|status|
 |:---:|:---:|:---:|
-|1|websocket server||
-|2|matching server (liquibook)||
-|3|high available matching service (dragonboat)||
+|1|websocket server|0%|
+|2|matching server (liquibook)|0%|
+|3|high available matching service (dragonboat)|0%|
+|4|rpc framework|0%|
