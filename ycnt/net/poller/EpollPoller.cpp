@@ -47,7 +47,7 @@ base::Timestamp EpollPoller::poll(
       channel->setRevents(events_[i].events);
       activeChannels.push_back(channel);
     }
-    if (UNLIKELY(numEvents == events_.size())) {
+    if (UNLIKELY(static_cast<size_t>(numEvents) == events_.size())) {
       events_.resize(events_.size() * 2);
     }
   } else if (numEvents == 0) {

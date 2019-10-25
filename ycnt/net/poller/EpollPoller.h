@@ -26,8 +26,8 @@ class EpollPoller : public Poller {
   static constexpr int kInitEventsSize = 16;
   using ChannelVec = std::vector<Channel *>;
 
-  EpollPoller(EventLoop *loop);
-  ~EpollPoller();
+  explicit EpollPoller(EventLoop *loop);
+  ~EpollPoller() final;
   base::Timestamp poll(int timeoutMs, ChannelVec &activeChannels) override;
   void updateChannel(Channel *channel) override;
   void removeChannel(Channel *channel) override;
@@ -37,10 +37,10 @@ class EpollPoller : public Poller {
   using ChannelMap = std::map<int, Channel *>;
   using EventVec = std::vector<struct epoll_event>;
   void updateInEpoll(int op, Channel *channel);
-  ChannelMap channels_;
-  EventVec events_;
-  int epollfd_;
   EventLoop *loop_;
+  int epollfd_;
+  EventVec events_;
+  ChannelMap channels_;
 };
 
 } // namespace net

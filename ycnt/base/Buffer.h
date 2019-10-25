@@ -37,6 +37,7 @@ class FixedBuffer {
     size_t actualLen = std::min(avail(), len);
     ::memcpy(cur_, buf, actualLen);
     cur_ += actualLen;
+    return actualLen;
   }
 
   const char *data() const

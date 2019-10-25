@@ -203,6 +203,7 @@ bool Logger::init(
   asyncOutput_ =
     new AsyncLogging(basename, bucketSize, rollSize, flushInterval);
   asyncOutput_->start();
+  return true;
 }
 
 StringArg Logger::getBasename(StringArg filename)

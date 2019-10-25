@@ -118,7 +118,7 @@ std::unique_ptr<ThreadPool> ThreadPool::newThreadPool(
   std::unique_ptr<ThreadPool>
     pool(new ThreadPool(name, policy, initCallback, maxQueueSize));
   pool->workers_.reserve(threadNum);
-  for (int i = 0; i < threadNum; ++i) {
+  for (size_t i = 0; i < threadNum; ++i) {
     char id[32];
     convert(id, i + 1);
     pool->workers_.emplace_back(
@@ -194,7 +194,7 @@ void ThreadPool::run(Task task, int workerId)
       case LB0: {
         int _idx = 0;
         int64_t minLoad = INT64_MAX;
-        for (int i = 0; i < workers_.size(); ++i) {
+        for (size_t i = 0; i < workers_.size(); ++i) {
           int64_t load = workers_[i]->workload();
           if (load < minLoad) {
             minLoad = load;

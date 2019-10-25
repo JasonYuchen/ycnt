@@ -21,7 +21,7 @@ class AsyncLogging::LogBufferPool {
   explicit LogBufferPool(size_t initSize = 4, size_t maxSize = 16)
     : maxPoolSize_(maxSize)
   {
-    for (int i = 0; i < initSize; ++i) {
+    for (size_t i = 0; i < initSize; ++i) {
       emptyBuffers_.push(std::make_unique<Buffer>());
     }
   }
@@ -84,7 +84,7 @@ void AsyncLogging::append(const char *logline, int len)
   int index = currentThread::tid() % fixedBuffers_.size();
   auto &node = fixedBuffers_[index];
   lock_guard<mutex> nodeGuard(node.mutex_);
-  if (node.buffer_->avail() > len) {
+  if (node.buffer_->avail() > static_cast<size_t>(len)) {
     node.buffer_->append(logline, len);
   } else {
     {
