@@ -4,6 +4,7 @@
 
 #include <ycnt/net/Socket.h>
 #include <ycnt/base/LogStream.h>
+#include <ycnt/net/InetAddress.h>
 
 namespace ycnt
 {

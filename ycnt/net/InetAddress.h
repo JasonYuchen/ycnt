@@ -7,6 +7,8 @@
 
 #include <netinet/in.h>
 #include <string>
+#include <vector>
+#include <variant>
 
 #include <ycnt/base/Types.h>
 
@@ -30,8 +32,12 @@ class InetAddress {
   std::string toIp() const;
   std::string toIpPort() const;
   uint16_t toPort() const;
+  const struct sockaddr *getSockAddr() const;
+  void setSockAddrInet6(const struct sockaddr_in6 &addr6);
+  void setSockAddr(const struct sockaddr_in &addr);
 
   static bool resolve(StringArg hostname, InetAddress &result);
+  static bool resolveAll(StringArg hostname, std::vector<InetAddress> &results);
 
  private:
   union {

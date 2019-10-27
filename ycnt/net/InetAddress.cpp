@@ -9,6 +9,8 @@
 #include <ycnt/net/InetAddress.h>
 #include <ycnt/base/LogStream.h>
 
+using namespace std;
+
 namespace ycnt
 {
 
@@ -30,10 +32,48 @@ InetAddress::InetAddress(uint16_t port, bool loopback, bool ipv6)
   }
 }
 
+const struct sockaddr *InetAddress::getSockAddr() const
+{
+  return reinterpret_cast<const sockaddr *>(&addr6_);
+}
+
+void InetAddress::setSockAddrInet6(const struct sockaddr_in6 &addr6)
+{
+  addr6_ = addr6;
+}
+
+void InetAddress::setSockAddr(const struct sockaddr_in &addr)
+{
+  addr_ = addr;
+}
+
 static __thread char t_resolveBuffer[64 * 1024];
 
-// FIXME: use c-ares for async name resolution
+// FIXME: consider c-ares for async name resolution
 bool InetAddress::resolve(StringArg hostname, InetAddress &result)
+{
+  struct hostent hent;
+  struct hostent *he = nullptr;
+  int herrno = 0;
+  ::memset(&hent, 0, sizeof(hent));
+  int ret = ::gethostbyname_r(
+    hostname.data(),
+    &hent,
+    t_resolveBuffer,
+    sizeof(t_resolveBuffer),
+    &he,
+    &herrno);
+  if (ret == 0 && he) {
+    assert(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
+    result.addr_.sin_addr = *reinterpret_cast<struct in_addr *>(he->h_addr);
+    return true;
+  } else {
+    LOG_WARN << "::gethostbyname_r herron: " << herrno;
+    return false;
+  }
+}
+
+bool InetAddress::resolveAll(StringArg hostname, vector<InetAddress> &results)
 {
   struct hostent hent;
   struct hostent *he = nullptr;

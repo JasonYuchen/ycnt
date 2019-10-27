@@ -117,11 +117,23 @@ class BoundedBlockingQueue {
     T value = std::move(queue_.front());
     queue_.pop();
     return value;
+  }
 
+  std::vector<T> popAll()
+  {
+    std::vector<T> results;
+    std::lock_guard<std::mutex> guard(mutex_);
+    size_t size = queue_.size();
+    results.reserve(size);
+    for (int i = 0; i < size; ++i) {
+      results.emplace_back(std::move(queue_.front()));
+      queue_.pop();
+    }
+    return results;
   }
 
   // FIXME: T must have a well-defined default constructor
-  T try_pop()
+  T tryPop()
   {
     std::lock_guard<std::mutex> guard(mutex_);
     if (queue_.empty()) {
