@@ -73,6 +73,7 @@ bool InetAddress::resolve(StringArg hostname, InetAddress &result)
   }
 }
 
+// TODO
 bool InetAddress::resolveAll(StringArg hostname, vector<InetAddress> &results)
 {
   struct hostent hent;
@@ -88,7 +89,7 @@ bool InetAddress::resolveAll(StringArg hostname, vector<InetAddress> &results)
     &herrno);
   if (ret == 0 && he) {
     assert(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
-    result.addr_.sin_addr = *reinterpret_cast<struct in_addr *>(he->h_addr);
+    //result.addr_.sin_addr = *reinterpret_cast<struct in_addr *>(he->h_addr);
     return true;
   } else {
     LOG_WARN << "::gethostbyname_r herron: " << herrno;
