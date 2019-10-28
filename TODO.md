@@ -14,6 +14,7 @@ A list of planning features that are different from muduo.
 |6|new connection load balancing policy (RR in muduo) ||
 |7|a new design of ThreadPool|&radic;|
 |8|batch accept new connections|&times;|
+|9|use maxConnections to limit the acceptor|&times;|
 
 A list of objectives beyond ycnt.
 

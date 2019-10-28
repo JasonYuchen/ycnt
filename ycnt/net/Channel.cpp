@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <memory>
 
+#include <ycnt/net/EventLoop.h>
 #include <ycnt/net/Channel.h>
 #include <ycnt/base/LogStream.h>
 
@@ -52,14 +53,14 @@ void Channel::handleEventImpl(base::Timestamp receiveTime)
   // TODO: why handle these events? take notes...
   eventHandling_ = true;
   if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
-    LOG_WARN << "POLLHUP: " << toString();
+    LOG_WARN << "POLLHUP: " << *this;
     if (closeCallback_) {
       closeCallback_();
     }
   }
 
   if (revents_ & POLLNVAL) {
-    LOG_WARN << "POLLNVAL: " << toString();
+    LOG_WARN << "POLLNVAL: " << *this;
   }
 
   if (revents_ & (POLLERR | POLLNVAL)) {
@@ -80,6 +81,12 @@ void Channel::handleEventImpl(base::Timestamp receiveTime)
     }
   }
   eventHandling_ = false;
+}
+
+void Channel::update()
+{
+  addedToLoop_ = true;
+  loop_->updateChannel(this);
 }
 
 void Channel::setReadCallback(ReadCallback cb)
@@ -115,6 +122,88 @@ Channel::Flag Channel::flag() const
 void Channel::setFlag(Flag flag)
 {
   flag_ = flag;
+}
+
+int Channel::events() const
+{
+  return events_;
+}
+
+int Channel::revents() const
+{
+  return revents_;
+}
+
+void Channel::setRevents(int revents)
+{
+  revents_ = revents;
+}
+
+bool Channel::isNoneEvent() const
+{
+  return events_ == kNoneEvent;
+}
+
+void Channel::enableReading()
+{
+  events_ |= kReadEvent;
+  update();
+}
+
+void Channel::disableReading()
+{
+  events_ &= ~kReadEvent;
+  update();
+}
+
+void Channel::enableWriting()
+{
+  events_ |= kWriteEvent;
+  update();
+}
+
+void Channel::disableWriting()
+{
+  events_ &= ~kWriteEvent;
+  update();
+}
+
+void Channel::disableAll()
+{
+  events_ = kNoneEvent;
+  update();
+}
+
+bool Channel::isReading() const
+{
+  return events_ & kReadEvent;
+}
+
+bool Channel::isWriting() const
+{
+  return events_ & kWriteEvent;
+}
+
+void Channel::remove()
+{
+  assert(isNoneEvent());
+  addedToLoop_ = false;
+  loop_->removeChannel(this);
+}
+
+EventLoop *Channel::ownerLoop()
+{
+  return loop_;
+}
+
+base::LogStream &operator<<(base::LogStream &stream, const Channel &channel)
+{
+  stream << "Channel{"
+         << " fd=" << channel.fd()
+         << " event=" << channel.events()
+         << " revent=" << channel.revents()
+         << " flag=" << channel.flag() << "}";
+  return stream;
 }
 
 } // net

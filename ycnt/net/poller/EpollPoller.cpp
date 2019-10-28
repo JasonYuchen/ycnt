@@ -61,7 +61,7 @@ base::Timestamp EpollPoller::poll(
 void EpollPoller::updateChannel(Channel *channel)
 {
   loop_->assertInLoopThread();
-  LOG_TRACE << channel->toString();
+  LOG_TRACE << channel;
   Channel::Flag flag = channel->flag();
   int fd = channel->fd();
   switch (flag) {
@@ -101,7 +101,7 @@ void EpollPoller::updateChannel(Channel *channel)
 void EpollPoller::removeChannel(Channel *channel)
 {
   loop_->assertInLoopThread();
-  LOG_TRACE << channel->toString();
+  LOG_TRACE << channel;
   Channel::Flag flag = channel->flag();
   int fd = channel->fd();
   assert(channels_.find(fd) != channels_.end());
@@ -129,7 +129,7 @@ void EpollPoller::updateInEpoll(int op, Channel *channel)
   event.data.ptr = channel;
   if (::epoll_ctl(epollfd_, op, channel->fd(), &event) < 0) {
     LOG_ERROR << "epoll_ctl error: "
-              << ::strerror(errno) << " for " << channel->toString();
+              << ::strerror(errno) << " for " << channel;
   }
 }
 

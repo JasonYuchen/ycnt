@@ -11,6 +11,7 @@
 
 #include <ycnt/base/Types.h>
 #include <ycnt/base/Timestamp.h>
+#include <ycnt/base/LogStream.h>
 
 namespace ycnt
 {
@@ -39,6 +40,7 @@ class Channel {
   Flag flag() const;
   void setFlag(Flag flag);
   int events() const;
+  int revents() const;
   void setRevents(int revents);
   bool isNoneEvent() const;
   void enableReading();
@@ -46,19 +48,24 @@ class Channel {
   void enableWriting();
   void disableWriting();
   void disableAll();
+  bool isReading() const;
+  bool isWriting() const;
+  void remove();
 
   // for debugging
-  std::string toString();
-  static const char *eventToString();
-  static const char *flagToString();
+  EventLoop *ownerLoop();
+  //std::string toString();
+  static const char *eventToString(int event);
+  static const char *flagToString(Flag flag);
  private:
   DISALLOW_COPY_AND_ASSIGN(Channel);
 
   static constexpr int kNoneEvent = 0;
-  static constexpr int kReadEvent = POLLIN | POLLOUT;
+  static constexpr int kReadEvent = POLLIN | POLLPRI;
   static constexpr int kWriteEvent = POLLOUT;
 
   void handleEventImpl(base::Timestamp receiveTime);
+  void update();
 
   EventLoop *loop_;
   const int fd_;
@@ -74,6 +81,8 @@ class Channel {
   EventCallback closeCallback_;
   EventCallback errorCallback_;
 };
+
+base::LogStream &operator<<(base::LogStream &stream, const Channel &channel);
 
 } // namespace net
 
