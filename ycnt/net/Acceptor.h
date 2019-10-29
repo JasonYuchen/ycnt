@@ -27,13 +27,14 @@ class Acceptor {
   Acceptor(
     EventLoop *loop,
     const InetAddress &listenAddress,
-    int maxConnections,
     bool reuseaddr,
     bool reuseport);
   ~Acceptor();
   void setNewConnectionCallback(const NewConnectionCallback &cb);
   bool listening() const;
   void listen();
+  void pause();
+  void resume();
  private:
   DISALLOW_COPY_AND_ASSIGN(Acceptor);
   void handleRead();
@@ -43,7 +44,7 @@ class Acceptor {
   Channel acceptChannel_;
   NewConnectionCallback newConnectionCallback_;
   bool listening_;
-  int maxConnections_;
+  bool pause_;
 };
 
 } // namespace net
