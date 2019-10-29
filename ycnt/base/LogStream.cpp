@@ -121,7 +121,7 @@ LogStream &LogStream::operator<<(const string &v)
   return *this;
 }
 
-LogStream &LogStream::operator<<(const StringArg &v)
+LogStream &LogStream::operator<<(const string_view &v)
 {
   buffer_.append(v.data(), v.size());
   return *this;
@@ -156,7 +156,7 @@ void defaultFlush()
 AsyncLogging *Logger::asyncOutput_ = nullptr;
 Logger::LogLevel Logger::logLevel_ = INFO;
 
-Logger::Logger(StringArg file, int line, LogLevel level)
+Logger::Logger(string_view file, int line, LogLevel level)
   : basename_(getBasename(file)),
     time_(Timestamp::now()),
     level_(level),
@@ -164,8 +164,8 @@ Logger::Logger(StringArg file, int line, LogLevel level)
 {
   formatTime();
   stream_
-    << StringArg(currentThread::tidString(), currentThread::tidStringLength())
-    << StringArg(LogLevelName[level], 6)
+    << string_view(currentThread::tidString(), currentThread::tidStringLength())
+    << string_view(LogLevelName[level], 6)
     << ' ';
 }
 
@@ -206,7 +206,7 @@ bool Logger::init(
   return true;
 }
 
-StringArg Logger::getBasename(StringArg filename)
+string_view Logger::getBasename(string_view filename)
 {
   const char *slash = ::strrchr(filename.data(), '/');
   if (slash) {
@@ -239,7 +239,7 @@ void Logger::formatTime()
   char buf[32];
   int length = snprintf(buf, sizeof(buf), ".%06d ", microseconds);
   assert(length == 8);
-  stream_ << StringArg(t_time, 19) << StringArg(buf, 8);
+  stream_ << string_view(t_time, 19) << string_view(buf, 8);
 }
 
 } // namespace base

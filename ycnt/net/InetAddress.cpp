@@ -32,6 +32,11 @@ InetAddress::InetAddress(uint16_t port, bool loopback, bool ipv6)
   }
 }
 
+sa_family_t InetAddress::family() const
+{
+  return addr_.sin_family;
+}
+
 const struct sockaddr *InetAddress::getSockAddr() const
 {
   return reinterpret_cast<const sockaddr *>(&addr6_);
@@ -50,7 +55,7 @@ void InetAddress::setSockAddr(const struct sockaddr_in &addr)
 static __thread char t_resolveBuffer[64 * 1024];
 
 // FIXME: consider c-ares for async name resolution
-bool InetAddress::resolve(StringArg hostname, InetAddress &result)
+bool InetAddress::resolve(string_view hostname, InetAddress &result)
 {
   struct hostent hent;
   struct hostent *he = nullptr;
@@ -74,7 +79,7 @@ bool InetAddress::resolve(StringArg hostname, InetAddress &result)
 }
 
 // TODO
-bool InetAddress::resolveAll(StringArg hostname, vector<InetAddress> &results)
+bool InetAddress::resolveAll(string_view hostname, vector<InetAddress> &results)
 {
   struct hostent hent;
   struct hostent *he = nullptr;

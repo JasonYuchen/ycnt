@@ -38,7 +38,7 @@ class LogStream {
   LogStream &operator<<(const char *v);
   LogStream &operator<<(const unsigned char *v);
   LogStream &operator<<(const std::string &v);
-  LogStream &operator<<(const StringArg &v);
+  LogStream &operator<<(const std::string_view &v);
   LogStream &operator<<(const Buffer &v);
 
   void append(const char *data, size_t len)
@@ -68,7 +68,7 @@ class Logger {
   enum LogLevel {
     TRACE, DEBUG, INFO, WARN, ERROR, FATAL, NUM_LOG_LEVELS,
   };
-  Logger(StringArg file, int line, LogLevel level);
+  Logger(std::string_view file, int line, LogLevel level);
   ~Logger();
 
   LogStream &stream();
@@ -83,9 +83,9 @@ class Logger {
   static LogLevel logLevel_;
   static AsyncLogging *asyncOutput_;
 
-  StringArg getBasename(StringArg filename);
+  std::string_view getBasename(std::string_view filename);
   void formatTime();
-  StringArg basename_;
+  std::string_view basename_;
   Timestamp time_;
   LogLevel level_;
   int line_;

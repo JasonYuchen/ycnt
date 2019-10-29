@@ -25,7 +25,7 @@ class InetAddress {
     uint16_t port = 0,
     bool loopback = false,
     bool ipv6 = false);
-  explicit InetAddress(StringArg ip, uint16_t port, bool ipv6 = false);
+  explicit InetAddress(std::string_view ip, uint16_t port, bool ipv6 = false);
   explicit InetAddress(const struct sockaddr_in &addr);
   explicit InetAddress(const struct sockaddr_in6 &addr);
   sa_family_t family() const;
@@ -36,8 +36,10 @@ class InetAddress {
   void setSockAddrInet6(const struct sockaddr_in6 &addr6);
   void setSockAddr(const struct sockaddr_in &addr);
 
-  static bool resolve(StringArg hostname, InetAddress &result);
-  static bool resolveAll(StringArg hostname, std::vector<InetAddress> &results);
+  static bool resolve(std::string_view hostname, InetAddress &result);
+  static bool resolveAll(
+    std::string_view hostname,
+    std::vector<InetAddress> &results);
 
  private:
   union {
