@@ -55,8 +55,9 @@ void InetAddress::setSockAddr(const struct sockaddr_in &addr)
 static __thread char t_resolveBuffer[64 * 1024];
 
 // FIXME: consider c-ares for async name resolution
-bool InetAddress::resolve(string_view hostname, InetAddress &result)
+optional<InetAddress> InetAddress::resolve(string_view hostname)
 {
+  InetAddress result;
   struct hostent hent;
   struct hostent *he = nullptr;
   int herrno = 0;
@@ -71,16 +72,17 @@ bool InetAddress::resolve(string_view hostname, InetAddress &result)
   if (ret == 0 && he) {
     assert(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
     result.addr_.sin_addr = *reinterpret_cast<struct in_addr *>(he->h_addr);
-    return true;
+    return result;
   } else {
     LOG_WARN << "::gethostbyname_r herron: " << herrno;
-    return false;
+    return nullopt;
   }
 }
 
 // TODO
-bool InetAddress::resolveAll(string_view hostname, vector<InetAddress> &results)
+optional<vector<InetAddress>> InetAddress::resolveAll(string_view hostname)
 {
+  vector<InetAddress> results;
   struct hostent hent;
   struct hostent *he = nullptr;
   int herrno = 0;
@@ -95,10 +97,10 @@ bool InetAddress::resolveAll(string_view hostname, vector<InetAddress> &results)
   if (ret == 0 && he) {
     assert(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
     //result.addr_.sin_addr = *reinterpret_cast<struct in_addr *>(he->h_addr);
-    return true;
+    return results;
   } else {
     LOG_WARN << "::gethostbyname_r herron: " << herrno;
-    return false;
+    return nullopt;
   }
 }
 
